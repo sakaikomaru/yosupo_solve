@@ -119,65 +119,65 @@ public:
 
 using mint = modint<998244353>;
 
-/* https://atcoder.jp/contests/agc038/tasks/agc038_c */
-
 template<typename T>
-void fztDIV(vector<T>& f, int m) {
-  VB sieve(m, true);
-  for (int i = 2; i < m; i++) {
-    if (sieve[i]) {
-      for (int j = (m - 1) / i; j > 0; j--) {
-        sieve[j * i] = false;
-        f[j] += f[j * i];
-      }
+void fzt(vector<T>& a, int m) {
+  vector<T> b(m);
+  for (int i = 1; i < m; i <<= 1) {
+    for (int j = 0; j < m / 2; j++) {
+      int k = j << 1;
+      b[k] = a[j];
+      b[k + 1] = a[j] + a[j + m / 2];
     }
+    a.swap(b);
   }
 }
 template<typename T>
-void fmtDIV(vector<T>& f, int m) {
-  VB sieve(m, true);
-  for (int i = 2; i < m; i++) {
-    if (sieve[i]) {
-      for (int j = 1; j * i < m; j++) {
-        sieve[j * i] = false;
-        f[j] -= f[i * j];
+void fmt(vector<T>& a, int m) {
+  vector<T> b(m);
+  for (int i = 1; i < m; i <<= 1) {
+    for (int j = 0; j < m / 2; j++) {
+      int k = j << 1;
+      b[k] = a[j];
+      b[k + 1] =  a[j + m / 2] - a[j];
+    }
+    a.swap(b);
+  }
+}
+void subset_convolution(vector<mint>& a, vector<mint>& b, vector<mint>& c, int m) {
+  if (m == 0) return;
+  int n = __builtin_ctz(m);
+  vector<vector<mint>> AA(n + 1, vector<mint>(m));
+  vector<vector<mint>> BB(n + 1, vector<mint>(m));
+  vector<vector<mint>> CC(n + 1, vector<mint>(m));
+  REP(j,m) {
+    AA[__builtin_popcount(j)][j] = a[j];
+    BB[__builtin_popcount(j)][j] = b[j];
+  }
+  REP(i,n) {
+    fzt(AA[i], m);
+    fzt(BB[i], m);
+  }
+  for (int i = 0; i <= n; i++) {
+    for (int j = 0; j <= n - i; j++) {
+      for (int k = 0; k < m; k++) {
+        CC[i + j][k] = CC[i + j][k] + AA[i][k] * BB[j][k];
       }
     }
   }
+  REP(i,(n+1)) fmt(CC[i], m);
+  c.resize(m);
+  REP(i,m) c[i] = CC[__builtin_popcount(i)][i];
 }
 
-const int MAX = 1000010;
-const int MOD = 998244353;
-Int inv[MAX], fact[MAX], fi[MAX];
-void inverse() {
-  int i;
-  inv[1] = 1;
-  for (i = 2; i < MAX; i++) inv[i] = MOD - (MOD / i) * inv[MOD % i] % MOD;
-  fact[0] = fi[0] = 1;
-  for (i = 1; i < MAX; i++) {
-    fact[i] = fact[i - 1] * i % MOD;
-    fi[i] = (fi[i - 1] * inv[i]) % MOD;
-  }
-}
-/**
-{An}: A1 A2 A3 A4 .. An
-lcm(A1, A2) + lcm(A1, A3) + lcm(A1, A4) + ... + lcm(A1, An)
-            + lcm(A2, A3) + lcm(A2, A4) + ... + lcm(A2, An)
-                          + lcm(A3, A4) + ... + lcm(A3, An)
-                                          ... + lcm(A(n-1), An)
-*/
 
 int main() {
-  cin.tie(nullptr);
-  ios::sync_with_stdio(false);
-
   int N; cin >> N;
-  VI a(MAX), b(MAX);
-  REP(i,N) {
-    cin >> a[i];
-    b[a[i]] += a[i];
-    b[a[i]] %= MOD;
-  }
-
+  int m = 1 << N;
+  vector<mint> a(m), b(m), c;
+  REP(i,m) cin >> a[i];
+  REP(i,m) cin >> b[i];
+  subset_convolution(a,b,c,m);
+  for (const auto& p : c) cout << p << ' ';
+  cout << '\n';
   return 0;
 }

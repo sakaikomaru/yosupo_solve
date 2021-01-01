@@ -82,7 +82,52 @@ vector<int> palindrome(const string& s) {
   }
   return d;
 }
-
+pair<vector<int>,vector<int>> palindromes(const string& s) {
+  int n = s.size();
+  vector<int> xs((n + 1), 0);
+  vector<int> ys(n, 0);
+  for (int z = 0; z < 2; z++) {
+    int l = 0, r = 0;
+    for (int i = 0; i < n; i++) {
+      int zz = (z == 1) ? 0 : 1;
+      int t = r - i + zz;
+      if (i < r) {
+        if (z == 0) xs[i] = min(t, xs[l + t]);
+        else        ys[i] = min(t, ys[l + t]);
+      }
+      int L, R;
+      if (z == 0) {
+        L = i - xs[i];
+        R = i + xs[i] - zz;
+      }
+      else {
+        L = i - ys[i];
+        R = i + ys[i] - zz;
+      }
+      while (L != 0 && R + 1 < n && s[L-1] == s[R+1]) {
+        if (z == 0) xs[i]++;
+        else        ys[i]++;
+        L--;
+        R++;
+      }
+      if (R > r) l = L, r = R;
+    }
+  }
+  auto p = make_pair(xs, ys);
+  return p;
+}
+vector<int> enumerate_parindromes(const string& s) {
+  auto ps = palindromes(s);
+  auto even = ps.first;
+  auto odd = ps.second;
+  vector<int> res(2 * s.size() - 1, 0);
+  even.erase(even.begin());
+  for (int i = 0; i < 2 * s.size() - 1; i++) {
+    if (i & 1) res[i] = 2 * even[i / 2];
+    else       res[i] = 2 * odd[i / 2] + 1;
+  }
+  return res;
+}
 
 int main() {
   cin.tie(nullptr);
